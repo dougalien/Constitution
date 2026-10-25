@@ -11,6 +11,7 @@ question search in search.py. It runs offline, with no API key.
 Run: streamlit run app.py
 """
 
+import base64
 import html
 import random
 import re
@@ -36,6 +37,8 @@ EXAMPLES = [
 ]
 QUIZ_LENGTH = 5
 CASE_BY_NAME = {c["name"]: c for c in CASES}
+# drawn for this app in the Dougalien Systems colors, so no image license is needed
+BELL = "data:image/svg+xml;base64," + base64.b64encode((brand.ASSETS / "liberty_bell.svg").read_bytes()).decode()
 
 st.set_page_config(page_title="Constitution Explorer", layout="wide", page_icon=brand.page_icon("📜"))
 brand.apply_branding()
@@ -43,6 +46,7 @@ brand.apply_branding()
 st.html(
     f"""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap');
 .plain {{ background: {brand.SAND_TINT}; border-left: 4px solid {brand.SLATE}; padding: 0.7rem 1rem;
           border-radius: 4px; margin: 0.3rem 0 0.8rem 0; color: {brand.INK}; }}
 .plain b {{ color: {brand.SLATE}; }}
@@ -73,6 +77,26 @@ st.html(
 .pill {{ display: inline-block; background: {brand.SAND_TINT}; color: {brand.INK}; border-radius: 999px;
          padding: 0.05rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem; }}
 .pill.over {{ background: {brand.RUST}; color: #fff; }}
+.hero {{ display: flex; align-items: center; gap: 1.6rem; background: linear-gradient(135deg, {brand.SAND_TINT} 0%, #F7F2E7 55%, {brand.SAND_TINT} 100%);
+          border: 1px solid {brand.RULE}; border-bottom: 5px solid {brand.RUST}; border-radius: 8px;
+          padding: 1.2rem 1.6rem; margin: 0.2rem 0 1rem 0; position: relative; overflow: hidden; }}
+.hero .bell {{ flex: 0 0 auto; width: 104px; }}
+.hero .words {{ flex: 1 1 auto; min-width: 0; }}
+.hero .script {{ font-family: 'Pinyon Script', 'Snell Roundhand', 'Apple Chancery', cursive; color: {brand.SLATE};
+                 font-size: 2.6rem; line-height: 1; margin: 0; }}
+.hero h1 {{ margin: 0.15rem 0 0.35rem 0 !important; padding: 0 !important; color: {brand.INK}; font-size: 2.4rem; }}
+.hero p {{ margin: 0; color: {brand.CAPTION}; font-size: 1.02rem; max-width: 46rem; }}
+.hero .page {{ flex: 0 0 auto; width: 150px; height: 180px; transform: rotate(3deg); background: #FBF6EA;
+                border: 2px solid {brand.SAND}; border-radius: 3px; padding: 0.7rem 0.8rem;
+                box-shadow: 2px 3px 8px rgba(27,30,32,0.12); }}
+.hero .page .script {{ color: {brand.INK}; font-size: 2rem; }}
+.hero .page .indent {{ padding-left: 1.6rem; }}
+.hero .page .lines {{ height: 86px; margin-top: 0.6rem; opacity: 0.5;
+                      background: repeating-linear-gradient(to bottom, {brand.MUTED} 0 1.5px, transparent 1.5px 10px); }}
+@media (max-width: 760px) {{ .hero {{ flex-direction: column; align-items: flex-start; gap: 0.6rem; padding: 1rem 1.1rem; }}
+                             .hero .page {{ display: none; }} .hero .bell {{ width: 56px; }}
+                             .hero h1 {{ line-height: 1.15 !important; }}
+                             .hero h1 {{ font-size: 1.8rem; }} .hero .script {{ font-size: 2rem; }} }}
 </style>
 """
 )
@@ -142,11 +166,19 @@ def _new_fact():
     st.session_state.fact = random.choice(choices)
 
 
-st.title("Constitution Explorer")
-st.markdown(
-    "Ask any question about the U.S. Constitution in your own words. You'll get a short, plain answer first, then "
-    "the exact words of the Constitution behind it, and the court cases and debates if you want to dig deeper."
-)
+st.html(f"""
+<div class="hero">
+  <img class="bell" src="{BELL}" alt="The Liberty Bell">
+  <div class="words">
+    <div class="script">We the People</div>
+    <h1>Constitution Explorer</h1>
+    <p>Ask any question about the U.S. Constitution in your own words. You'll get a short, plain answer first,
+    then the exact words of the Constitution behind it, and the court cases and debates if you want to dig deeper.</p>
+  </div>
+  <div class="page" aria-hidden="true"><div class="script">We the</div><div class="script indent">People</div>
+    <div class="lines"></div></div>
+</div>
+""")
 fact_col, button_col = st.columns([6, 1], vertical_alignment="center")
 fact_col.html(f'<div class="fact"><span class="tag">🎲 Fun fact</span>{FACTS[st.session_state.fact]}</div>')
 button_col.button("Another fact", on_click=_new_fact, use_container_width=True)
