@@ -11,14 +11,17 @@ question search in search.py. It runs offline, with no API key.
 Run: streamlit run app.py
 """
 
+import html
 import random
+import re
 
 import streamlit as st
 
 import dougalien_brand as brand
 from constitution import BY_ID, PARTS
 from learning import CASES, DEBATES, FACTS, QUIZ
-from search import ask
+import ai_answer
+from search import ask, key_clause, match_faq
 from sources import ARCHIVES_CONSTITUTION, HOUSE_MANUAL, case_sources, debate_sources, passage_sources
 
 EXAMPLES = [
@@ -53,6 +56,15 @@ st.html(
 .sources li {{ margin: 0.1rem 0; }}
 .sources a {{ color: {brand.SLATE}; }}
 .sources a:hover {{ color: {brand.RUST}; }}
+.answer {{ background: {brand.SHEET}; border: 1px solid {brand.RULE}; border-left: 6px solid {brand.SLATE};
+           padding: 1rem 1.25rem; border-radius: 6px; color: {brand.INK}; font-size: 1.15rem; line-height: 1.55;
+           margin: 0.6rem 0 0.4rem 0; }}
+.answer .tag {{ color: {brand.SLATE}; font-weight: 700; letter-spacing: 0.04em; font-size: 0.8rem;
+                text-transform: uppercase; display: block; margin-bottom: 0.3rem; }}
+.keyquote {{ border-left: 3px solid {brand.RUST}; padding: 0.3rem 0 0.3rem 0.9rem; margin: 0.6rem 0 0.2rem 0;
+             font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; color: {brand.CAPTION}; }}
+.keyquote .where {{ font-family: inherit; font-size: 0.85rem; color: {brand.MUTED}; display: block; margin-top: 0.25rem;
+                    font-style: normal; }}
 .changed {{ color: {brand.RUST}; font-size: 0.92rem; }}
 .side {{ background: {brand.SHEET}; border: 1px solid {brand.RULE}; border-top: 4px solid {brand.SLATE};
          padding: 0.8rem 1rem; border-radius: 4px; height: 100%; color: {brand.INK}; }}
@@ -82,14 +94,16 @@ def sources(links, title="📚 Primary sources"):
         st.html(f'<div class="sources"><b>{title}</b><ul>{items}</ul></div>')
 
 
-def show_passage(p, open_text=True):
-    st.markdown(f"#### {p['label']}: {p['title']}")
+def show_passage(p, open_text=True, heading=True):
+    if heading:
+        st.markdown(f"#### {p['label']}: {p['title']}")
+    st.html(f'<div class="plain"><b>In plain language:</b> {md(p["plain"])}</div>')
     if open_text:
+        st.caption("The original words:")
         st.markdown(quote(p["text"]))
     else:
         with st.expander("Read the original words"):
             st.markdown(quote(p["text"]))
-    st.html(f'<div class="plain"><b>In plain language:</b> {md(p["plain"])}</div>')
     if p.get("changed"):
         st.html(f'<div class="changed">✎ Changed later: {p["changed"]}</div>')
     sources(passage_sources(p))
@@ -130,8 +144,8 @@ def _new_fact():
 
 st.title("Constitution Explorer")
 st.markdown(
-    "Ask any question about the U.S. Constitution. You'll see the exact words that answer it, explained in plain "
-    "language, along with the Supreme Court cases and debates that shape what those words mean today."
+    "Ask any question about the U.S. Constitution in your own words. You'll get a short, plain answer first, then "
+    "the exact words of the Constitution behind it, and the court cases and debates if you want to dig deeper."
 )
 fact_col, button_col = st.columns([6, 1], vertical_alignment="center")
 fact_col.html(f'<div class="fact"><span class="tag">🎲 Fun fact</span>{FACTS[st.session_state.fact]}</div>')
@@ -141,6 +155,11 @@ ask_tab, read_tab, court_tab, debate_tab, quiz_tab, facts_tab = st.tabs(
     ["💬 Ask a question", "📜 Read the Constitution", "⚖️ Supreme Court cases", "🤔 Big debates", "🎯 Quiz",
      "🎲 Fun facts"]
 )
+
+@st.cache_data(show_spinner=False, max_entries=500, ttl=7 * 24 * 3600)
+def ai_short_answer(question, passage_ids):
+    return ai_answer.answer(question, [BY_ID[i] for i in passage_ids])
+
 
 # ------------------------------------------------------------------ ask
 with ask_tab:
@@ -160,28 +179,47 @@ with ask_tab:
 
     if question.strip():
         passages, cases, debates = ask(question)
+        faq = match_faq(question)
         if not passages:
-            st.warning(
-                "I couldn't find a part of the Constitution that matches. Try different words, such as "
-                "\"voting\", \"President\", \"free speech\" or \"search\", or browse the **Read the Constitution** tab."
+            st.info(
+                "Hmm, I couldn't find a part of the Constitution about that. Try asking it another way, or use words "
+                "like \"voting\", \"President\", \"free speech\" or \"search\". You can also browse the "
+                "**Read the Constitution** tab."
             )
         else:
-            st.divider()
-            st.subheader("What the Constitution says")
-            st.caption("Best match first. The quoted words are the original text, with its 1787 spelling.")
-            for i, p in enumerate(passages):
-                show_passage(p, open_text=i == 0 or len(p["text"]) < 900)
-            if cases:
-                st.subheader("Supreme Court cases connected to this")
-                for c in cases:
-                    show_case(c)
+            top = passages[0]
+            tag = "💡 The short answer"
+            if faq:
+                short = faq["answer"]
+                clause = faq["quote"]
+            else:
+                short = None
+                if ai_answer.enabled():
+                    with st.spinner("Writing a short answer..."):
+                        short = ai_short_answer(question, tuple(p["id"] for p in passages))
+                if short:
+                    tag = "💡 The short answer (written by AI from the passages below)"
+                else:
+                    sentences = re.split(r"(?<=[.!?])\s+", top["plain"])
+                    short = "Here's the part of the Constitution that fits your question best. " + " ".join(sentences[:2])
+                clause = key_clause(top, question)
+            st.html(f'<div class="answer"><span class="tag">{tag}</span>{html.escape(short)}</div>')
+            st.html(f'<div class="keyquote">"{clause}"<span class="where">From the {top["label"]}, '
+                    f'in its original wording</span></div>')
+
+            st.markdown("##### Want to know more?")
+            for p in passages:
+                with st.expander(f"📜 {p['label']}: {p['title']}"):
+                    show_passage(p, open_text=True, heading=False)
+            for c in cases:
+                show_case(c)
             if debates:
-                st.subheader("People disagree about this")
                 d = debates[0]
-                with st.expander(f"🤔 {d['title']}"):
+                with st.expander(f"🤔 People disagree: {d['title']}"):
                     show_debate(d)
             st.caption(
-                "This app finds matching parts of the Constitution by keywords. It's a learning tool, not legal advice."
+                "The short answers are written for students and checked against the Constitution's text. "
+                "This is a learning tool, not legal advice."
             )
 
 # ------------------------------------------------------------------ read

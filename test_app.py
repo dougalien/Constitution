@@ -25,6 +25,7 @@ assert len(FACTS) >= 20
 
 # the search finds the right part for common questions
 EXPECT = {
+    "What does the Constitution say about the post office?": "a1s8",
     "How old do you have to be to be President?": "a2s1",
     "Can police search my phone?": "am4",
     "Do I have free speech at school?": "am1",
@@ -61,6 +62,37 @@ for c in CASES:
 for d in DEBATES:
     assert debate_sources(d), d["title"]
     assert all(u.startswith("https://") for _, u in debate_sources(d))
+
+# hand-written answers: quotes are real, passages exist, and common questions find the right answer
+from answers import FAQ
+from search import match_faq
+for f in FAQ:
+    assert f["passages"] and all(pid in BY_ID for pid in f["passages"]), f["asks"][0]
+    assert f["quote"] in BY_ID[f["passages"][0]]["text"], ("quote not in text", f["asks"][0])
+    assert all(n in case_names for n in f.get("cases", [])), f["asks"][0]
+    for a in f["asks"]:
+        assert match_faq(a) is f, ("ask matches another answer", a, (match_faq(a) or {}).get("asks"))
+ANSWERS = {
+    "can government take my land?": "Can the government take my land?",
+    "when can government take my land?": "When can the government take my land?",
+    "can cops search my phone": "Can police search my phone?",
+    "Can my teacher take my phone?": "Can my school search my backpack?",
+    "can the government take away my guns": "Can I own a gun?",
+    "How long can a president serve?": "How long is a President's term?",
+}
+for question, first_ask in ANSWERS.items():
+    f = match_faq(question)
+    assert f and f["asks"][0] == first_ask, (question, f and f["asks"][0])
+assert match_faq("who signed the declaration of independence") is None
+assert match_faq("What does the Constitution say about the post office?") is None  # "post" is not "post online"
+
+# the optional AI answer stays off without a key, and only sees the matching passages
+import os
+import ai_answer
+os.environ.pop("ANTHROPIC_API_KEY", None)
+assert not ai_answer.enabled() and ai_answer.answer("Can a state print money?", [BY_ID["a1s10"]]) is None
+prompt = ai_answer.build_prompt("Can a state print money?", [BY_ID["a1s10"]])
+assert BY_ID["a1s10"]["text"] in prompt and "Can a state print money?" in prompt
 
 # the Constitution text matches the official House Manual copy word for word
 import check_text

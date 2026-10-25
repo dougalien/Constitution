@@ -11,6 +11,7 @@ import re
 from collections import Counter
 
 from constitution import PASSAGES
+from answers import FAQ
 from learning import CASES, DEBATES
 
 STOP = set(
@@ -39,7 +40,7 @@ SYNONYMS = {
     "boss": "president", "potus": "president", "senator": "senate", "congressman": "house representative",
     "leader": "president speaker", "army": "military", "troops": "military army", "war": "war military",
     "money": "money taxes coin", "taxes": "tax", "taxed": "tax", "judge": "judges courts", "court": "courts",
-    "protest": "assembly speech", "protesting": "assembly speech", "post": "speech social media",
+    "protest": "assembly speech", "protesting": "assembly speech",
     "online": "social media speech", "internet": "social media speech", "tiktok": "social media speech",
     "instagram": "social media speech", "snapchat": "social media speech", "flag": "flag burning",
     "citizen": "citizenship", "immigrant": "naturalization citizenship", "immigration": "naturalization",
@@ -57,8 +58,10 @@ SYNONYMS = {
 def _stem(word):
     for suffix in ("ments", "ment", "ings", "ing", "ies", "es", "s", "ed"):
         if len(word) > len(suffix) + 3 and word.endswith(suffix):
-            return word[: -len(suffix)] + ("y" if suffix == "ies" else "")
-    return word
+            word = word[: -len(suffix)] + ("y" if suffix == "ies" else "")
+            break
+    # "office" and "offices" (stemmed "offic") should match
+    return word[:-1] if len(word) > 4 and word.endswith("e") else word
 
 
 def tokens(text):
@@ -170,14 +173,22 @@ def ask(question, n_passages=3, n_cases=3):
     q = query_tokens(question)
     by_id = {p["id"]: p for p in PASSAGES}
     direct = [by_id[i] for i in _direct_hits(question)]
+    faq = match_faq(question)
     passages = list(direct)
+    if faq and not direct:
+        passages = [by_id[i] for i in faq["passages"]]
+        n_passages = max(n_passages, len(passages))
     if q:
         for p in _top(_PASSAGE_INDEX.scores(q), PASSAGES, n_passages + 2, 1.0):
             if p not in passages:
                 passages.append(p)
     passages = passages[: max(n_passages, len(direct))]
 
-    cases = _related(_CASE_INDEX.scores(q) if q else [0.0] * len(CASES), CASES, passages, n_cases)
+    if faq and not direct:
+        by_name = {c["name"]: c for c in CASES}
+        cases = [by_name[n] for n in faq.get("cases", [])]
+    else:
+        cases = _related(_CASE_INDEX.scores(q) if q else [0.0] * len(CASES), CASES, passages, n_cases)
     debates = _related(_DEBATE_INDEX.scores(q) if q else [0.0] * len(DEBATES), DEBATES, passages, 1, strong=8.0)
     return passages, cases, debates
 
@@ -190,7 +201,68 @@ def _related(scores, items, passages, n, strong=8.0):
     ranked = []
     for item, score in zip(items, scores):
         tie = max((weights.get(r, 0) for r in item["related"]), default=0)
-        if (tie and score >= 1.5) or score >= strong:
+        if (tie and score >= 3.0) or score >= strong:
             ranked.append((score + tie, item))
     ranked.sort(key=lambda x: -x[0])
     return [item for _, item in ranked[:n]]
+
+
+# ------------------------------------------------------------------ hand-written answers
+# Question words matter here ("can" vs "when"), so they are kept, unlike in the passage search.
+_QUESTION_WORDS = {"when", "how", "who", "what", "why", "can", "much", "many", "old", "long"}
+
+
+def _faq_groups(text):
+    """One set of tokens per word: the word's stem plus its everyday synonyms, so a word with many
+    synonyms still counts as one word."""
+    groups = []
+    for w in re.findall(r"[a-z0-9]+", text.lower()):
+        if w in _QUESTION_WORDS:
+            groups.append(frozenset([w]))
+        elif w not in STOP:
+            groups.append(frozenset([_stem(w), *tokens(SYNONYMS.get(w, ""))]))
+    return list(dict.fromkeys(groups))
+
+
+_ASKS = [(i, _faq_groups(a)) for i, f in enumerate(FAQ) for a in f["asks"]]
+_FAQ_DF = Counter(t for _, groups in _ASKS for t in set().union(*groups))
+_FAQ_IDF = {t: math.log(1 + len(_ASKS) / d) for t, d in _FAQ_DF.items()}
+_UNSEEN = math.log(1 + len(_ASKS))  # a word no way of asking uses counts as much as the rarest word
+
+
+def _weight(group, matched=None):
+    """A word's weight: its rarest seen token, or only the tokens that matched."""
+    seen = [_FAQ_IDF[t] for t in group if t in _FAQ_IDF and (matched is None or t in matched)]
+    if matched is not None:
+        return max(seen, default=0.0)
+    return max(seen, default=_UNSEEN)
+
+
+def match_faq(question, threshold=0.6):
+    """The hand-written answer whose wording best matches the question, or None.
+
+    Similarity is an idf-weighted Dice score between the words of the question and of each way of
+    asking, where a word matches if it or one of its synonyms is in the other text."""
+    q = _faq_groups(question)
+    if not q:
+        return None
+    q_all = set().union(*q)
+    q_total = sum(_weight(g) for g in q)
+    best, best_score = None, 0.0
+    for i, a in _ASKS:
+        a_all = set().union(*a)
+        both = sum(_weight(g, a_all) for g in q) + sum(_weight(g, q_all) for g in a)
+        score = both / (q_total + sum(_weight(g) for g in a))
+        if score > best_score:
+            best, best_score = FAQ[i], score
+    return best if best_score >= threshold else None
+
+
+def key_clause(passage, question):
+    """The clause of a passage that best fits the question, for showing on its own."""
+    q = set(query_tokens(question))
+    clauses = [c.strip() for c in re.split(r"(?<=[;:.])\s+|\n\n", passage["text"]) if len(c.split()) >= 5]
+    if not clauses:
+        return passage["text"]
+    scored = [(len(q & set(tokens(c))), -i, c) for i, c in enumerate(clauses)]
+    return max(scored)[2]
