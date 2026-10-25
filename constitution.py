@@ -1,6 +1,7 @@
 """The text of the U.S. Constitution, piece by piece, with a plain-language explanation of each piece.
 
-The wording follows the National Archives transcription, which keeps the original spelling
+The wording is checked word for word against the official text printed in the House Manual by the
+U.S. Government Publishing Office (run `python check_text.py`). It keeps the original spelling
 ("chuse", "defence") and capitalization. Parts later changed by an amendment keep their original
 wording and carry a `changed` note, as the Archives does.
 
@@ -257,7 +258,7 @@ PASSAGES = [
             "To promote the Progress of Science and useful Arts, by securing for limited Times to Authors and "
             "Inventors the exclusive Right to their respective Writings and Discoveries;\n\n"
             "To constitute Tribunals inferior to the supreme Court;\n\n"
-            "To define and punish Piracies and Felonies committed on the high Seas, and Offences against the Law of "
+            "To define and punish Piracies and Felonies committed on the high Seas, and Offenses against the Law of "
             "Nations;\n\n"
             "To declare War, grant Letters of Marque and Reprisal, and make Rules concerning Captures on Land and "
             "Water;\n\n"
@@ -926,9 +927,9 @@ PASSAGES = [
             "one of whom, at least, shall not be an inhabitant of the same state with themselves; they shall name in "
             "their ballots the person voted for as President, and in distinct ballots the person voted for as "
             "Vice-President, and they shall make distinct lists of all persons voted for as President, and of all "
-            "persons voted for as Vice-President, and of the number of votes for each, which lists they shall sign "
+            "persons voted for as Vice-President, and the number of votes for each, which lists they shall sign "
             "and certify, and transmit sealed to the seat of the government of the United States, directed to the "
-            "President of the Senate;—The President of the Senate shall, in the presence of the Senate and House of "
+            "President of the Senate;—The President of the Senate shall, in presence of the Senate and House of "
             "Representatives, open all the certificates and the votes shall then be counted;—The person having the "
             "greatest number of votes for President, shall be the President, if such number be a majority of the "
             "whole number of Electors appointed; and if no person have such majority, then from the persons having "
@@ -997,7 +998,7 @@ PASSAGES = [
         ),
         "plain": (
             "One of the most important amendments. Section 1 says almost everyone born in the U.S. is a citizen "
-            "(birthright citizenship), overturning the Dred Scott decision. It also says states must give every "
+            "(birthright citizenship), overturning the Dred Scott decision. The Supreme Court confirmed this in Trump v. Barbara (2026). It also says states must give every "
             "person due process and equal protection of the laws. The Supreme Court has used this to apply most of "
             "the Bill of Rights to the states (called incorporation) and in landmark cases like Brown v. Board of "
             "Education (1954). Section 2 replaced the three-fifths clause. Section 3 bars people who took an oath to "
@@ -1059,7 +1060,7 @@ PASSAGES = [
         "text": (
             "Section 1. After one year from the ratification of this article the manufacture, sale, or transportation "
             "of intoxicating liquors within, the importation thereof into, or the exportation thereof from the United "
-            "States and all territory subject to the jurisdiction thereof for beverage purposes is hereby prohibited. "
+            "States and all territories subject to the jurisdiction thereof for beverage purposes is hereby prohibited. "
             "[...]"
         ),
         "plain": (
@@ -1090,7 +1091,7 @@ PASSAGES = [
         "label": "20th Amendment (1933)",
         "title": "New start dates for terms (the \"Lame Duck\" Amendment)",
         "text": (
-            "Section 1. The terms of the President and the Vice President shall end at noon on the 20th day of "
+            "Section 1. The terms of the President and Vice President shall end at noon on the 20th day of "
             "January, and the terms of Senators and Representatives at noon on the 3d day of January, of the years in "
             "which such terms would have ended if this article had not been ratified; and the terms of their "
             "successors shall then begin.\n\n"

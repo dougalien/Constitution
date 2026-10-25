@@ -19,6 +19,7 @@ import dougalien_brand as brand
 from constitution import BY_ID, PARTS
 from learning import CASES, DEBATES, FACTS, QUIZ
 from search import ask
+from sources import ARCHIVES_CONSTITUTION, HOUSE_MANUAL, case_sources, debate_sources, passage_sources
 
 EXAMPLES = [
     "How old do you have to be to be President?",
@@ -46,7 +47,12 @@ st.html(
          padding: 0.8rem 1.1rem; border-radius: 4px; color: {brand.INK}; font-size: 1.05rem; }}
 .fact .tag {{ color: {brand.RUST}; font-weight: 700; letter-spacing: 0.04em; font-size: 0.8rem;
               text-transform: uppercase; display: block; margin-bottom: 0.2rem; }}
-.stApp blockquote, .stApp blockquote p {{ color: {brand.CAPTION} !important; font-family: Georgia, 'Times New Roman', serif; font-size: 1.02rem; }}
+.stApp blockquote, .stApp blockquote p {{ color: {brand.CAPTION} !important; opacity: 1 !important; font-family: Georgia, 'Times New Roman', serif; font-size: 1.02rem; }}
+.sources {{ font-size: 0.9rem; color: {brand.INK}; margin: 0.2rem 0 1rem 0; }}
+.sources ul {{ margin: 0.2rem 0 0 1.1rem; padding: 0; }}
+.sources li {{ margin: 0.1rem 0; }}
+.sources a {{ color: {brand.SLATE}; }}
+.sources a:hover {{ color: {brand.RUST}; }}
 .changed {{ color: {brand.RUST}; font-size: 0.92rem; }}
 .side {{ background: {brand.SHEET}; border: 1px solid {brand.RULE}; border-top: 4px solid {brand.SLATE};
          padding: 0.8rem 1rem; border-radius: 4px; height: 100%; color: {brand.INK}; }}
@@ -69,6 +75,13 @@ def quote(text):
     return "\n".join("> " + line if line else ">" for line in md(text).split("\n"))
 
 
+def sources(links, title="📚 Primary sources"):
+    """A short list of links to primary sources."""
+    if links:
+        items = "".join(f"<li><a href=\"{url}\" target=\"_blank\">{label}</a></li>" for label, url in links)
+        st.html(f'<div class="sources"><b>{title}</b><ul>{items}</ul></div>')
+
+
 def show_passage(p, open_text=True):
     st.markdown(f"#### {p['label']}: {p['title']}")
     if open_text:
@@ -79,6 +92,7 @@ def show_passage(p, open_text=True):
     st.html(f'<div class="plain"><b>In plain language:</b> {md(p["plain"])}</div>')
     if p.get("changed"):
         st.html(f'<div class="changed">✎ Changed later: {p["changed"]}</div>')
+    sources(passage_sources(p))
 
 
 def show_case(c, expanded=False):
@@ -88,7 +102,8 @@ def show_case(c, expanded=False):
         st.markdown(f"**The question:** {md(c['question'])}")
         st.markdown(f"**The decision:** {md(c['decision'])}")
         st.markdown(f"**Why it matters:** {md(c['matters'])}")
-        st.caption("Connected to: " + ", ".join(BY_ID[r]["label"] for r in c["related"]))
+        sources(case_sources(c) + [(f"{BY_ID[r]['label']} in the Constitution Annotated (Congress.gov)", url)
+                                   for r in c["related"] for _, url in passage_sources(BY_ID[r])[1:2]])
 
 
 def show_debate(d):
@@ -97,9 +112,11 @@ def show_debate(d):
     a.html(f'<div class="side"><h5>{d["side_a"][0]}</h5>{md(d["side_a"][1])}</div>')
     b.html(f'<div class="side b"><h5>{d["side_b"][0]}</h5>{md(d["side_b"][1])}</div>')
     st.markdown(f"🤔 **Think about it:** {md(d['think'])}")
-    if d["cases"]:
-        st.caption("Cases to look at: " + ", ".join(d["cases"]) + " (see the Supreme Court tab)")
-    st.caption("Parts of the Constitution: " + ", ".join(BY_ID[r]["label"] for r in d["related"]))
+    links = debate_sources(d)
+    links += [link for name in d["cases"] for link in case_sources(CASE_BY_NAME[name])[:1]]
+    links += [(f"{BY_ID[r]['label']} in the Constitution Annotated (Congress.gov)", url)
+              for r in d["related"] for _, url in passage_sources(BY_ID[r])[1:2]]
+    sources(links, "📚 Read the sources yourself")
 
 
 # ------------------------------------------------------------------ header and fun fact
@@ -184,6 +201,7 @@ with read_tab:
                     st.html(f'<div class="plain"><b>In plain language:</b> {md(p["plain"])}</div>')
                     if p.get("changed"):
                         st.html(f'<div class="changed">✎ Changed later: {p["changed"]}</div>')
+                    sources(passage_sources(p))
 
 # ------------------------------------------------------------------ court
 with court_tab:
@@ -261,7 +279,9 @@ with facts_tab:
 
 st.divider()
 st.caption(
-    "Text of the Constitution from the National Archives transcription. Long amendments are shortened where marked "
-    "[...]. Cases and debates are summarized for students and are not legal advice. "
+    f"Text of the Constitution checked word for word against the official copy printed by the U.S. Government "
+    f"Publishing Office ([House Manual]({HOUSE_MANUAL})); see also the [National Archives transcription]"
+    f"({ARCHIVES_CONSTITUTION}). Long amendments are shortened where marked [...]. Cases and debates are "
+    "summarized for students and are not legal advice; follow the source links to read the originals. "
     "A [Dougalien Systems](https://dougalien.com) app."
 )

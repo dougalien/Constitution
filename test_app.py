@@ -36,6 +36,7 @@ EXPECT = {
     "second amendment": "am2",
     "Article II, Section 2": "a2s2",
     "Who can vote at 18?": "am26",
+    "Is someone born here a citizen?": "am14",
     "Can women vote?": "am19",
     "Can the government take my house?": "am5",
     "Can a state print its own money?": "a1s10",
@@ -50,5 +51,20 @@ for question, want in EXPECT.items():
     assert passages and passages[0]["id"] == want, (question, [p["id"] for p in passages])
 assert ask("Can my school search my backpack?")[1][0]["name"] == "New Jersey v. T.L.O."
 assert ask("xyzzy") == ([], [], [])
+
+# every passage, case and debate links to primary sources
+from sources import OPINIONS, case_sources, debate_sources, passage_sources
+for p in PASSAGES:
+    assert len(passage_sources(p)) >= 2, p["id"]
+for c in CASES:
+    assert c["name"] in OPINIONS, c["name"]
+for d in DEBATES:
+    assert debate_sources(d), d["title"]
+    assert all(u.startswith("https://") for _, u in debate_sources(d))
+
+# the Constitution text matches the official House Manual copy word for word
+import check_text
+assert not check_text.check()[2], "text differs from the official copy: run python check_text.py"
+
 print(f"OK: {len(PASSAGES)} passages, {len(CASES)} cases, {len(DEBATES)} debates, {len(FACTS)} facts, "
       f"{len(QUIZ)} quiz questions, {len(EXPECT)} search checks")

@@ -336,6 +336,43 @@ CASES = [
         "related": ["a2s1", "a2s4"],
         "keywords": "presidential immunity president prosecute crimes official acts executive power",
     },
+    {
+        "name": "Learning Resources v. Trump", "year": 2026, "vote": "6–3", "topic": "Presidential power",
+        "question": "Could the President use an emergency law (the International Emergency Economic Powers Act) to put tariffs, which are taxes on imports, on goods from other countries?",
+        "decision": (
+            "No. The law lets the President \"regulate\" imports in an emergency, but that doesn't include taxing "
+            "them. Chief Justice Roberts noted that \"the Framers did not vest any part of the taxing power in the "
+            "Executive Branch.\""
+        ),
+        "matters": "It's a modern example of Article I at work: the power to tax, including tariffs, belongs to Congress unless Congress clearly hands it over.",
+        "related": ["a1s8", "a2s1"],
+        "keywords": "tariffs taxes imports trade president emergency powers congress taxing power",
+    },
+    {
+        "name": "Trump v. Slaughter", "year": 2026, "vote": "6–3", "topic": "Presidential power",
+        "question": "Could Congress stop the President from firing a member of the Federal Trade Commission (FTC) without a good reason?",
+        "decision": (
+            "No. Because the FTC carries out executive power, the President may remove its commissioners at will. "
+            "The Court said that if anything was left of Humphrey's Executor v. United States (1935), which had "
+            "allowed such limits, it was overruled."
+        ),
+        "matters": "It gives the President more control over independent agencies. Supporters call it accountability; critics worry about losing independent expertise.",
+        "related": ["a2s1", "a2s2", "a2s3"],
+        "keywords": "fire remove removal power independent agencies ftc president executive power",
+    },
+    {
+        "name": "Trump v. Barbara", "year": 2026, "vote": "6–3 (5–4 on the constitutional reasoning)",
+        "topic": "Equal protection and civil rights",
+        "question": "Could an executive order deny citizenship to children born in the U.S. whose parents were here unlawfully or only temporarily?",
+        "decision": (
+            "No. The Court held that such children are \"subject to the jurisdiction\" of the United States and are "
+            "citizens at birth under the 14th Amendment's Citizenship Clause. Justice Kavanaugh agreed with the result "
+            "but would have decided it under a federal law instead of the Constitution."
+        ),
+        "matters": "It confirmed birthright citizenship, the rule since United States v. Wong Kim Ark (1898), for nearly everyone born on U.S. soil.",
+        "related": ["am14"],
+        "keywords": "birthright citizenship born in the united states citizen immigrants fourteenth amendment executive order",
+    },
 ]
 
 # ------------------------------------------------------------------ Big debates
@@ -437,7 +474,7 @@ DEBATES = [
                    "The founders feared a king. Congress declares war and writes laws; executive orders and emergency "
                    "powers shouldn't replace them."),
         "think": "Presidents have sent troops into combat without a declaration of war many times. Who should decide when the country fights?",
-        "cases": ["United States v. Nixon", "Trump v. United States"],
+        "cases": ["United States v. Nixon", "Trump v. United States", "Learning Resources v. Trump", "Trump v. Slaughter"],
         "related": ["a1s8", "a2s1", "a2s2", "a2s3"],
         "keywords": "presidential power executive orders war powers emergency immunity checks and balances",
     },
