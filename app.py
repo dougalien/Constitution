@@ -166,14 +166,15 @@ def _new_fact():
     st.session_state.fact = random.choice(choices)
 
 
+brand.label()
 st.html(f"""
 <div class="hero">
   <img class="bell" src="{BELL}" alt="The Liberty Bell">
   <div class="words">
     <div class="script">We the People</div>
     <h1>Constitution Explorer</h1>
-    <p>Ask any question about the U.S. Constitution in your own words. You'll get a short, plain answer first,
-    then the exact words of the Constitution behind it, and the court cases and debates if you want to dig deeper.</p>
+    <p>Ask any question about the U.S. Constitution in your own words and get a short, plain answer, the exact
+    words behind it, and the court cases and debates if you want to dig deeper.</p>
   </div>
   <div class="page" aria-hidden="true"><div class="script">We the</div><div class="script indent">People</div>
     <div class="lines"></div></div>
@@ -195,6 +196,7 @@ def ai_short_answer(question, passage_ids):
 
 # ------------------------------------------------------------------ ask
 with ask_tab:
+    brand.page_header("Ask a question about the Constitution", "Type a question in your own words, or name a part such as the 14th Amendment.", level=2)
     st.session_state.setdefault("question", "")
 
     def _use_example(q):
@@ -256,10 +258,7 @@ with ask_tab:
 
 # ------------------------------------------------------------------ read
 with read_tab:
-    st.markdown(
-        "The Constitution has a Preamble, seven Articles and 27 Amendments. Pick a part to read it with "
-        "plain-language explanations."
-    )
+    brand.page_header("Read the Constitution", "It has a Preamble, seven Articles and 27 Amendments. Pick a part to read it with a plain-language explanation.", level=2)
     part = st.radio("Part", [name for name, _ in PARTS], horizontal=False, label_visibility="collapsed")
     for name, ids in PARTS:
         if name == part:
@@ -275,11 +274,7 @@ with read_tab:
 
 # ------------------------------------------------------------------ court
 with court_tab:
-    st.markdown(
-        "The Supreme Court decides what the Constitution's words mean in real disputes. These landmark cases changed "
-        "how Americans understand their rights and their government. Some were later overruled, which shows that "
-        "interpretation can change."
-    )
+    brand.page_header("Landmark Supreme Court cases", "The Supreme Court decides what the Constitution's words mean in real disputes. These cases changed how Americans understand their rights and their government, and some were later overruled.", level=2)
     topics = sorted({c["topic"] for c in CASES})
     left, right = st.columns([2, 1])
     picked = left.multiselect("Topics", topics, placeholder="All topics")
@@ -292,11 +287,7 @@ with court_tab:
 
 # ------------------------------------------------------------------ debates
 with debate_tab:
-    st.markdown(
-        "Thoughtful people read the same words and reach different conclusions. Each debate below gives the main "
-        "arguments on both sides. The goal isn't to pick the \"right\" answer but to understand why people disagree, "
-        "so you can make up your own mind."
-    )
+    brand.page_header("Big debates about the Constitution", "People read the same words and reach different conclusions. Each debate gives the main arguments on both sides, so you can see why people disagree and make up your own mind.", level=2)
     for d in DEBATES:
         with st.expander(f"🤔 {d['title']}"):
             show_debate(d)
@@ -313,7 +304,8 @@ with quiz_tab:
         _new_quiz()
     st.session_state.setdefault("best", 0)
 
-    st.markdown(f"Five random questions. Check your answers, then try a new round. Best score so far: "
+    brand.page_header("Test what you know", "Five random questions. Check your answers, then try a new round.", level=2)
+    st.markdown(f"Best score so far: "
                 f"**{st.session_state.best} / {QUIZ_LENGTH}**")
     answers = []
     for n, qi in enumerate(st.session_state.quiz, start=1):
@@ -343,7 +335,7 @@ with quiz_tab:
 
 # ------------------------------------------------------------------ facts
 with facts_tab:
-    st.markdown("Surprising, funny and little-known facts about the Constitution and the people who wrote it.")
+    brand.page_header("Fun facts", "Surprising, funny and little-known facts about the Constitution and the people who wrote it.", level=2)
     for f in FACTS:
         st.markdown(f"- {md(f)}")
 
