@@ -40,7 +40,7 @@ To put it online, sign in at [share.streamlit.io](https://share.streamlit.io), c
 | `dougalien_brand.py`, `.streamlit/config.toml`, `assets/` | the Dougalien Systems look, the same as Care-Gap and Geo-Tools |
 | `test_app.py` | checks the content and the search; run `python test_app.py` |
 
-The question search is a keyword search (BM25) with a list of everyday words mapped to the Constitution's words (for example "gun" also searches "arms"). It runs offline, needs no API key, and only ever shows the real text, so it can't make anything up. It also recognizes named parts like "14th Amendment" or "Article II, Section 2".
+The question search is a keyword search (BM25, Robertson and Zaragoza 2009) with a list of everyday words mapped to the Constitution's words (for example "gun" also searches "arms"). It runs offline, needs no API key, and only ever shows the real text, so it can't make anything up. It also recognizes named parts like "14th Amendment" or "Article II, Section 2".
 
 Common questions get a hand-written short answer from `answers.py`. Different ways of asking the same thing get the same answer, but "can" and "when" questions are told apart, so "Can the government take my land?" and "When can the government take my land?" get different answers. Other questions get the plain-language explanation of the best-matching passage.
 

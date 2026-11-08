@@ -345,5 +345,6 @@ st.caption(
     f"Publishing Office ([House Manual]({HOUSE_MANUAL})); see also the [National Archives transcription]"
     f"({ARCHIVES_CONSTITUTION}). Long amendments are shortened where marked [...]. Cases and debates are "
     "summarized for students and are not legal advice; follow the source links to read the originals. "
+    "The question search uses BM25 ranking (Robertson and Zaragoza, 2009). "
     "A [Dougalien Systems](https://dougalien.com) app."
 )

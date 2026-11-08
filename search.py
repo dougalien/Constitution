@@ -1,6 +1,6 @@
 """Find the parts of the Constitution, court cases and debates that answer a question.
 
-A small BM25 keyword search, so it runs offline with no API key and only ever shows the real text.
+A small BM25 keyword search (Robertson and Zaragoza, 2009, The probabilistic relevance framework: BM25 and beyond), so it runs offline with no API key and only ever shows the real text.
 Each passage is indexed on its title, keywords, plain-language explanation and original words,
 with the title and keywords weighted most. Common everyday words are mapped to the words the
 Constitution uses (for example "gun" also searches "arms").
