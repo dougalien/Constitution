@@ -25,6 +25,9 @@ import ai_answer
 from search import ask, key_clause, match_faq
 from sources import ARCHIVES_CONSTITUTION, HOUSE_MANUAL, case_sources, debate_sources, passage_sources
 
+__version__ = "0.1.0"
+FEEDBACK_URL = "https://github.com/dougalien/Constitution/issues"
+
 EXAMPLES = [
     "How old do you have to be to be President?",
     "Can my school search my backpack?",
@@ -80,6 +83,7 @@ st.html(
 .hero {{ display: flex; align-items: center; gap: 1.6rem; background: linear-gradient(135deg, {brand.SAND_TINT} 0%, #F7F2E7 55%, {brand.SAND_TINT} 100%);
           border: 1px solid {brand.RULE}; border-bottom: 5px solid {brand.RUST}; border-radius: 8px;
           padding: 1.2rem 1.6rem; margin: 0.2rem 0 1rem 0; position: relative; overflow: hidden; }}
+.dg-labelrow {{ margin-bottom: 0.3rem; }}  /* keep the label clear of the hero card */
 .hero .bell {{ flex: 0 0 auto; width: 104px; }}
 .hero .words {{ flex: 1 1 auto; min-width: 0; }}
 .hero .script {{ font-family: 'Pinyon Script', 'Snell Roundhand', 'Apple Chancery', cursive; color: {brand.SLATE};
@@ -182,7 +186,7 @@ st.html(f"""
 """)
 fact_col, button_col = st.columns([6, 1], vertical_alignment="center")
 fact_col.html(f'<div class="fact"><span class="tag">🎲 Fun fact</span>{FACTS[st.session_state.fact]}</div>')
-button_col.button("Another fact", on_click=_new_fact, use_container_width=True)
+button_col.button("Another fact", on_click=_new_fact, width="stretch")
 
 ask_tab, read_tab, court_tab, debate_tab, quiz_tab, facts_tab = st.tabs(
     ["💬 Ask a question", "📜 Read the Constitution", "⚖️ Supreme Court cases", "🤔 Big debates", "🎯 Quiz",
@@ -209,7 +213,7 @@ with ask_tab:
     st.caption("Or try one of these:")
     cols = st.columns(4)
     for i, ex in enumerate(EXAMPLES):
-        cols[i % 4].button(ex, key=f"ex{i}", on_click=_use_example, args=(ex,), use_container_width=True)
+        cols[i % 4].button(ex, key=f"ex{i}", on_click=_use_example, args=(ex,), width="stretch")
 
     if question.strip():
         passages, cases, debates = ask(question)
@@ -313,9 +317,9 @@ with quiz_tab:
         answers.append(st.radio(f"**{n}. {q}**", choices, index=None,
                                 key=f"q{st.session_state.quiz_round}_{qi}"))
     check, again = st.columns([1, 1])
-    if check.button("Check my answers", type="primary", use_container_width=True):
+    if check.button("Check my answers", type="primary", width="stretch"):
         st.session_state.quiz_checked = True
-    again.button("New quiz", on_click=_new_quiz, use_container_width=True)
+    again.button("New quiz", on_click=_new_quiz, width="stretch")
 
     if st.session_state.quiz_checked:
         score = 0
@@ -348,3 +352,4 @@ st.caption(
     "The question search uses BM25 ranking (Robertson and Zaragoza, 2009). "
     "A [Dougalien Systems](https://dougalien.com) app."
 )
+st.caption(f"Constitution Explorer {__version__} · beta · [Report a problem]({FEEDBACK_URL})")
